@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -15,25 +16,30 @@ public class MainManager : MonoBehaviour
     public GameObject GameOverText;
     
     private bool m_Started = false;
-    private static int m_Points;
+    [HideInInspector]public int m_Points;
 
-    private static int bestScore;
+    public static int bestScore;
     
     private bool m_GameOver = false;
+    public static MainManager instance;
+    private string useName;
 
-    
     // Start is called before the first frame update
+    private void Awake()
+    {
+        MenuUIHandler.instance.LoadBestScore();
+        Debug.Log("Name: " + MenuUIHandler.playerName);
+        useName = MenuUIHandler.playerName;
+    }
     void Start()
     {
-        Debug.Log(bestScore);
-        Debug.Log(MenuUIHandler.playerName);
-        BestScoreText.text = $"Best Score: {bestScore} Name:{MenuUIHandler.playerName}";
-        const float step = 0.6f;
-        int perLine = Mathf.FloorToInt(4.0f / step);
-        
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
-        for (int i = 0; i < LineCount; ++i)
-        {
+         
+         const float step = 0.6f;
+         int perLine = Mathf.FloorToInt(4.0f / step);
+
+         int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
+         for (int i = 0; i < LineCount; ++i)
+         {
             for (int x = 0; x < perLine; ++x)
             {
                 Vector3 position = new Vector3(-1.5f + step * x, 2.5f + i * 0.3f, 0);
@@ -41,11 +47,12 @@ public class MainManager : MonoBehaviour
                 brick.PointValue = pointCountArray[i];
                 brick.onDestroyed.AddListener(AddPoint);
             }
-        }
+         }
     }
 
     private void Update()
     {
+        BestScoreText.text = $"Best Score: {bestScore} Name:{useName}";
         if (!m_Started)
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -74,14 +81,10 @@ public class MainManager : MonoBehaviour
         ScoreText.text = $"Score : {m_Points}";
     }
 
-    public void SetBestScore()
-    {
-        bestScore = m_Points;
-    }
-
     public void GameOver()
     {
-        SetBestScore();
+        MenuUIHandler.instance.SetBestScore();
+        MenuUIHandler.instance.SaveBestScore();
         m_GameOver = true;
         GameOverText.SetActive(true);
     }
